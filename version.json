@@ -1,4 +1,4 @@
 {
-  "version": "1.0.2",
-  "notes": "Win7 兼容：依赖锁定 Flask3.0/Werkzeug3.0，cryptography 转可选；README 增 Win7 说明"
+  "version": "1.0.3",
+  "notes": "启动脚本自动探测 Chrome/Edge 安装路径，找不到不再报 msedge 错误，退回默认浏览器"
 }

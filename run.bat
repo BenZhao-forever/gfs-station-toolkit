@@ -15,8 +15,8 @@ python -m pip install -q -r requirements.txt
 REM Optional: at-rest password encryption. Skipped silently if it fails (e.g. Windows 7).
 python -m pip install -q cryptography >nul 2>nul
 
-REM Open fullscreen kiosk after 3s. Try Chrome, fall back to Edge.
-start "" cmd /c "timeout /t 3 >nul & (start chrome --app=http://127.0.0.1:5000/kiosk --start-fullscreen --user-data-dir=%~dp0chrome-profile || start msedge --app=http://127.0.0.1:5000/kiosk --start-fullscreen --user-data-dir=%~dp0edge-profile)"
+REM Open fullscreen kiosk after 3s (auto-detects Chrome/Edge; safe if none).
+start "" cmd /c "timeout /t 3 >nul & call "%~dp0open_kiosk.bat""
 
 :loop
 python app.py
