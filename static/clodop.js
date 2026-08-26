@@ -12,15 +12,15 @@
     head.insertBefore(s, head.firstChild);
   }
 
-  // 同时尝试 http:8000 与 https:8443，谁先就绪用谁
+  // 只加载与页面协议匹配的端口：http 页 → 8000，https 页 → 8443。
+  // 避免在 http 大屏上去碰 8443（CLodop 的 https 证书常报 SSL 错，且有混合内容问题）。
   function ensureLoaded() {
     if (window._clodopLoading) return;
     window._clodopLoading = true;
-    var http = "http://localhost:8000/CLodopfuncs.js";
-    var https = "https://localhost:8443/CLodopfuncs.js";
-    loadScript(location.protocol === "https:" ? https : http);
-    // 兜底再加载另一个端口
-    loadScript(https);
+    var url = (location.protocol === "https:")
+      ? "https://localhost:8443/CLodopfuncs.js"
+      : "http://localhost:8000/CLodopfuncs.js";
+    loadScript(url);
   }
   ensureLoaded();
 
