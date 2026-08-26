@@ -1,5 +1,7 @@
-Flask>=3.0
-requests>=2.31
-werkzeug>=3.0
-cryptography>=42.0
+# 核心依赖（同时兼容 Windows 7 的 Python 3.8 与新系统的 3.10+）
+Flask>=3.0,<3.1
+Werkzeug>=3.0,<3.1
+requests>=2.28
 pyserial>=3.5
+# 可选：密码本地加密。Win7 若装不上会自动降级（见 run.bat / README）。
+# cryptography

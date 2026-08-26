@@ -12,10 +12,26 @@
 
 ## 运行
 
-1. 装 Python 3.10+（勾选 Add to PATH）。
+1. 装 Python（勾选 **Add python.exe to PATH**）。
+   - Windows 10/11：Python 3.10+ 均可。
+   - **Windows 7：必须用 Python 3.8.10**（3.10+ 在 Win7 装不上）。
 2. 装 **CLodop Web 打印服务**（本目录上级的 `CLodop_Setup_for_Win32NT.exe`）——打印面单必须。
 3. 双击 **`run.bat`**：自动装依赖、起服务、全屏打开大屏。
 4. 打开后台配置：双击 `admin.bat` 或浏览器访问 `http://127.0.0.1:5000/admin`（默认密码 `admin123`，请尽快修改）。
+
+## Windows 7 说明
+
+可以在 Win7 上运行，注意：
+
+- **Python 用 3.8.10**（python.org 上 Win7 能装的最后版本；3.10+ 装不上）。核心依赖已锁定
+  Flask 3.0 / Werkzeug 3.0，兼容 3.8。
+- **浏览器**：Win7 上 Chrome / Edge 最高到 **v109**，大屏用的都是标准 JS/CSS，v109 正常。
+  若没装 Chrome，`run.bat` 会自动回退用 Edge。
+- **密码加密（cryptography）为可选**：Win7 上可能装不上，`run.bat` 会静默跳过，程序照常运行
+  （本地单机，DMS 密码只存本机 `data/` 文件，不上云、不进仓库）。想启用加密可自行
+  `pip install cryptography`（能装上就自动启用）。
+- **CLodop** 支持 Win7。若弹 “Load SSL Error” 是它自带的 https(8443) 证书问题，与打印无关，
+  点「确定」即可——本工具走 http(8000) 打印。
 
 ## 后台配置项（/admin）
 
