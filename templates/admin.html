@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GOFO 站点工具包 · 后台</title>
+<link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+  <!-- 登录 -->
+  <div id="login" class="login-wrap">
+    <div class="login-card">
+      <h1>站点工具包 · 后台</h1>
+      <p class="muted">本机管理员登录</p>
+      <input type="password" id="login-pw" placeholder="管理员密码">
+      <button id="login-btn">登录</button>
+      <div class="err" id="login-err"></div>
+      <div class="muted small">默认密码 admin123，登录后请到「安全」修改</div>
+    </div>
+  </div>
+
+  <!-- 主体 -->
+  <div id="app" class="hidden">
+    <header class="hd">
+      <div class="brand">GOFO 站点工具包 <span class="ver">v<span id="ver">-</span></span></div>
+      <nav class="tabs">
+        <button data-tab="dms" class="active">DMS 账号</button>
+        <button data-tab="print">打印</button>
+        <button data-tab="alert">提醒设置</button>
+        <button data-tab="serial">扫码枪</button>
+        <button data-tab="update">更新</button>
+        <button data-tab="logs">日志</button>
+        <button data-tab="security">安全</button>
+      </nav>
+      <div class="right">
+        <a href="/kiosk" target="_blank" class="link">打开大屏 ↗</a>
+        <button id="logout" class="ghost">退出</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- DMS 账号 -->
+      <section data-panel="dms" class="panel">
+        <h2>站点 DMS 账号</h2>
+        <p class="muted">用于司机签退（PDA 端）与打印查单（网页端），两端账号密码相同。</p>
+        <div class="grid">
+          <label>展示名 <input id="dms-name" placeholder="如：SFO01 站点"></label>
+          <label>账号 <input id="dms-username" placeholder="DMS 用户名"></label>
+          <label>密码 <input id="dms-password" type="password" placeholder="留空表示不修改"></label>
+          <label>时区 <input id="dms-timezone" placeholder="America/Los_Angeles"></label>
+          <label>站点权限 <input id="dms-site" placeholder="如 SFO01，留空沿用当前站点"></label>
+        </div>
+        <div class="row">
+          <button id="dms-save">保存</button>
+          <button id="dms-test" class="ghost">测试登录</button>
+          <span class="msg" id="dms-msg"></span>
+        </div>
+      </section>
+
+      <!-- 打印 -->
+      <section data-panel="print" class="panel hidden">
+        <h2>打印 token（DMS 网页版）</h2>
+        <p class="muted">换单打印接口需网页版 token。测试期可手动贴一个 <code>Bearer …</code>；接入网页登录后可自动刷新。</p>
+        <textarea id="print-token" rows="4" placeholder="Bearer eyJ..."></textarea>
+        <div class="row">
+          <button id="token-save">保存 token</button>
+          <input id="token-test-no" placeholder="测试单号，如 GFUS0106..." style="flex:1">
+          <button id="token-test" class="ghost">测试查单</button>
+        </div>
+        <div class="msg" id="print-msg"></div>
+      </section>
+
+      <!-- 提醒设置 -->
+      <section data-panel="alert" class="panel hidden">
+        <h2>强 / 弱提醒</h2>
+        <p class="muted">差值 = 应取件量 − 实取件量。</p>
+        <div class="grid">
+          <label>强提醒阈值 X（差 &gt; X 触发强提醒）<input id="s-strong" type="number" min="0"></label>
+          <label>弱提醒阈值（差 ≥ 此值触发弱提醒）<input id="s-weak" type="number" min="0"></label>
+          <label class="ck"><input id="s-wrong" type="checkbox"> 有错扫件量也算强提醒</label>
+          <label class="ck"><input id="s-sound" type="checkbox"> 强提醒播放“取件量低”</label>
+        </div>
+        <h3>面单尺寸 / 打印机</h3>
+        <div class="grid">
+          <label>面单宽(mm) <input id="s-lw" type="number"></label>
+          <label>面单高(mm) <input id="s-lh" type="number"></label>
+          <label>打印机名（空=默认打印机）<input id="s-printer" placeholder="CLodop 打印机名"></label>
+        </div>
+        <div class="row"><button id="alert-save">保存</button><span class="msg" id="alert-msg"></span></div>
+        <p class="muted small">强提醒：红底 + 声音 + 需放行；弱提醒：黄底。数对不上或有错扫都需人工放行/拒绝，队列暂停直到处理。</p>
+      </section>
+
+      <!-- 扫码枪 -->
+      <section data-panel="serial" class="panel hidden">
+        <h2>扫码枪（USB-COM）</h2>
+        <p class="muted">两把枪各接一个虚拟串口(COM)，勾选后保存并重启程序生效。未配置时可用键盘/HID 扫码。</p>
+        <div class="row"><button id="serial-refresh" class="ghost">刷新端口</button>
+          <label>波特率 <input id="s-baud" type="number" style="width:120px"></label></div>
+        <div id="serial-list" class="serial-list muted">加载中…</div>
+        <div class="row"><button id="serial-save">保存</button><span class="msg" id="serial-msg"></span></div>
+      </section>
+
+      <!-- 更新 -->
+      <section data-panel="update" class="panel hidden">
+        <h2>自动更新（GitHub 公开仓库）</h2>
+        <div class="grid">
+          <label>仓库（owner/repo）<input id="u-repo" placeholder="BenZhao-forever/gfs-station-toolkit"></label>
+          <label class="ck"><input id="u-auto" type="checkbox"> 启动时自动检查并更新</label>
+        </div>
+        <div class="row">
+          <button id="u-save" class="ghost">保存仓库设置</button>
+          <button id="u-check">检查更新</button>
+          <button id="u-apply" class="ghost">立即更新并重启</button>
+        </div>
+        <div class="msg" id="update-msg"></div>
+        <p class="muted small">当前版本 v<span id="u-cur">-</span></p>
+      </section>
+
+      <!-- 日志 -->
+      <section data-panel="logs" class="panel hidden">
+        <h2>异常 / 流水日志</h2>
+        <div class="row"><button id="logs-refresh" class="ghost">刷新</button></div>
+        <div id="logs-table" class="logs">加载中…</div>
+      </section>
+
+      <!-- 安全 -->
+      <section data-panel="security" class="panel hidden">
+        <h2>修改管理员密码</h2>
+        <div class="grid">
+          <label>新密码 <input id="new-pw" type="password" placeholder="至少 4 位"></label>
+        </div>
+        <div class="row"><button id="pw-save">修改密码</button><span class="msg" id="pw-msg"></span></div>
+        <p class="muted small" id="enc-note"></p>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/admin.js"></script>
+</body>
+</html>

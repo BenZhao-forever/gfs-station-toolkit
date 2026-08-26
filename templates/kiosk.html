@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GOFO 站点工具包</title>
+<link rel="stylesheet" href="/static/kiosk.css">
+</head>
+<body class="state-idle">
+  <!-- 顶栏 -->
+  <header class="topbar">
+    <div class="site" id="site-name">—</div>
+    <div class="status">
+      <span class="dot" id="ready-dot"></span>
+      <span id="status-text">连接中…</span>
+    </div>
+    <div class="queue">
+      <span id="queue-badge" class="badge hidden">队列 <b id="queue-count">0</b></span>
+      <span class="ver">v<span id="ver">-</span></span>
+    </div>
+  </header>
+
+  <!-- 主区 -->
+  <main id="stage">
+    <!-- 空闲 -->
+    <section id="view-idle" class="view">
+      <div class="scan-hint">
+        <div class="icon">◱</div>
+        <div class="big-hint" id="idle-text">请扫码</div>
+        <div class="sub-hint">司机签退请扫签退码 · 其余条码自动打印面单</div>
+      </div>
+    </section>
+
+    <!-- 签退结果 -->
+    <section id="view-signout" class="view hidden">
+      <div class="so-driver">
+        <span id="so-driver">—</span>
+        <span class="so-line" id="so-line"></span>
+      </div>
+      <div class="counts">
+        <div class="count"><div class="c-num" id="c-be">0</div><div class="c-lbl">应取件量</div></div>
+        <div class="count"><div class="c-num" id="c-rec">0</div><div class="c-lbl">实取件量</div></div>
+        <div class="count wrong"><div class="c-num" id="c-wrong">0</div><div class="c-lbl">错扫件量</div></div>
+      </div>
+      <div class="diff-row">
+        差值（应取−实取）：<b id="c-diff">0</b>
+        <span class="tag" id="so-msg"></span>
+      </div>
+      <!-- 需人工放行 -->
+      <div class="action-bar hidden" id="action-bar">
+        <div class="block-note">⛔ 队列已暂停，请先处理本单</div>
+        <div class="btns">
+          <button class="btn pass" id="btn-pass">放 行</button>
+          <button class="btn reject" id="btn-reject">拒 绝</button>
+        </div>
+      </div>
+      <div class="done-note hidden" id="so-done"></div>
+    </section>
+
+    <!-- 打印 -->
+    <section id="view-print" class="view hidden">
+      <div class="print-title" id="print-title">打印面单…</div>
+      <div class="print-way" id="print-way"></div>
+      <div class="print-status" id="print-status">正在送打印…</div>
+    </section>
+
+    <!-- 错误 -->
+    <section id="view-error" class="view hidden">
+      <div class="err-icon">!</div>
+      <div class="err-msg" id="err-msg">出错了</div>
+    </section>
+  </main>
+
+  <!-- 键盘/HID 扫码兜底：始终聚焦的隐藏输入 -->
+  <input id="kb" autocomplete="off" inputmode="none"
+         style="position:fixed;opacity:0;left:-9999px;top:0;width:1px;height:1px;">
+
+  <!-- 隐藏面单渲染 iframe（供 CLodop 抓 HTML） -->
+  <iframe id="labelframe" src="/label" style="position:fixed;left:-9999px;top:0;width:100mm;height:150mm;border:0;"></iframe>
+
+  <!-- 强提醒声音 -->
+  <audio id="snd-strong" src="/static/assets/qujianliangdi.mp3" preload="auto"></audio>
+
+  <script src="/static/clodop.js"></script>
+  <script src="/static/kiosk.js"></script>
+</body>
+</html>

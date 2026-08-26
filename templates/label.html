@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GOFO Label</title>
+<style>
+  /* 100mm x 150mm 4x6 thermal label */
+  :root{ --ink:#000; --line:2px solid #000; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ background:#fff; color:var(--ink); font-family:"Arial","Helvetica","Microsoft YaHei",sans-serif; }
+  #label{
+    width:100mm; height:150mm; background:#fff;
+    border:var(--line); display:flex; flex-direction:column;
+    overflow:hidden;
+  }
+  .row{ display:flex; }
+  .b-bot{ border-bottom:var(--line); }
+  .b-right{ border-right:var(--line); }
+  .pad{ padding:2mm 2.5mm; }
+
+  /* header */
+  .hdr{ align-items:stretch; }
+  .hdr .title{ flex:1; font-size:9mm; font-weight:800; letter-spacing:.5px;
+    display:flex; align-items:center; padding-left:2.5mm; }
+  .hdr .prod{ min-width:26mm; background:#000; color:#fff; font-size:8mm; font-weight:800;
+    display:flex; align-items:center; justify-content:center; }
+
+  /* ship to */
+  .ship-to{ flex-direction:column; }
+  .lbl{ font-size:3mm; letter-spacing:1px; color:#000; }
+  .name{ font-size:5.5mm; font-weight:800; margin-top:1mm; line-height:1.15; }
+  .addr{ font-size:4mm; font-weight:600; line-height:1.35; margin-top:.5mm; }
+  .citystate{ font-size:5mm; font-weight:800; margin-top:1.5mm; }
+
+  /* barcode */
+  .barcode-wrap{ flex-direction:column; align-items:center; padding:2mm 2mm 1mm; }
+  .barcode-wrap svg{ width:92%; height:20mm; }
+  .barcode-num{ font-size:6mm; font-weight:800; letter-spacing:1.5px; margin-top:.5mm; }
+
+  /* routing 3 cells */
+  .routing{ align-items:stretch; }
+  .routing .cell{ flex:1; display:flex; align-items:center; justify-content:center;
+    font-size:6.5mm; font-weight:800; padding:2mm 1mm; text-align:center; }
+  .routing .cell.roadarea{ background:#000; color:#fff; }
+
+  /* ship from + qr */
+  .from{ align-items:flex-start; }
+  .from .left{ flex:1; }
+  .from .from-addr{ font-size:3.4mm; line-height:1.4; margin-top:.5mm; }
+  .from .qr{ width:24mm; height:24mm; display:flex; align-items:center; justify-content:center; }
+  .from .qr canvas, .from .qr img{ width:22mm; height:22mm; }
+
+  /* sort marker */
+  .sort{ align-items:center; }
+  .sort .code{ font-size:5mm; font-weight:800; }
+  .sort .big{ font-size:11mm; font-weight:900; letter-spacing:1px; }
+  .sort .grow{ flex:1; }
+
+  /* footer */
+  .foot{ flex:1; flex-direction:column; align-items:center; justify-content:center; }
+  .foot .site{ font-size:4.5mm; font-weight:700; letter-spacing:1px; }
+  .foot .tag{ font-size:3mm; color:#000; margin-top:.5mm; }
+</style>
+</head>
+<body>
+  <div id="label">
+    <div class="row hdr b-bot">
+      <div class="title" id="l-title">GOFO</div>
+      <div class="prod" id="l-prod">ECO</div>
+    </div>
+
+    <div class="row ship-to b-bot pad">
+      <div class="lbl">SHIP TO:</div>
+      <div class="name" id="l-name">—</div>
+      <div class="addr" id="l-street">—</div>
+      <div class="citystate" id="l-citystate">—</div>
+    </div>
+
+    <div class="row barcode-wrap b-bot">
+      <svg id="l-barcode"></svg>
+      <div class="barcode-num" id="l-waybill">—</div>
+    </div>
+
+    <div class="row routing b-bot">
+      <div class="cell b-right" id="l-region">—</div>
+      <div class="cell b-right" id="l-pickup">—</div>
+      <div class="cell roadarea" id="l-roadarea">—</div>
+    </div>
+
+    <div class="row from b-bot pad">
+      <div class="left">
+        <div class="lbl">SHIP FROM:</div>
+        <div class="from-addr" id="l-from">—</div>
+      </div>
+      <div class="qr" id="l-qr"></div>
+    </div>
+
+    <div class="row sort b-bot pad">
+      <div>
+        <div class="code" id="l-sortcode">—</div>
+        <div class="code" id="l-fourcode" style="font-weight:600;font-size:3.6mm;">—</div>
+      </div>
+      <div class="grow"></div>
+      <div class="big" id="l-mark">—</div>
+    </div>
+
+    <div class="row foot">
+      <div class="site">www.gofoexpress.com</div>
+      <div class="tag">— delivery powered by GOFO Express —</div>
+    </div>
+  </div>
+
+  <script src="/static/vendor/jsbarcode.min.js"></script>
+  <script src="/static/vendor/qrcode.min.js"></script>
+  <script src="/static/label.js"></script>
+  <script>
+    // 预览：如果页面带了 ?preview=1，用内置样例数据渲染
+    (function(){
+      var qs = new URLSearchParams(location.search);
+      if (qs.get('preview') === '1' && window.__PREVIEW_DATA__) {
+        renderLabel(window.__PREVIEW_DATA__);
+      } else if (window.LABEL_DATA) {
+        renderLabel(window.LABEL_DATA);
+      }
+    })();
+  </script>
+</body>
+</html>

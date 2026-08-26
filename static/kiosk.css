@@ -1,0 +1,81 @@
+:root{
+  --bg:#0f1620; --card:#161f2b; --ink:#eef3f8; --sub:#9fb0c0;
+  --ok:#1fa463; --warn:#f4b400; --bad:#e5484d; --print:#2563eb;
+  --line:#25313f;
+}
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{ height:100%; }
+body{
+  font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+  background:var(--bg); color:var(--ink); overflow:hidden;
+  transition:background .25s ease;
+}
+.hidden{ display:none !important; }
+
+/* 顶栏 */
+.topbar{
+  height:8vh; min-height:56px; display:flex; align-items:center; gap:2vw;
+  padding:0 3vw; border-bottom:1px solid rgba(255,255,255,.12);
+}
+.topbar .site{ font-size:3.2vh; font-weight:800; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.topbar .status{ display:flex; align-items:center; gap:.8vw; font-size:2.4vh; color:var(--sub); }
+.dot{ width:1.6vh; height:1.6vh; border-radius:50%; background:#888; }
+.dot.ok{ background:var(--ok); } .dot.bad{ background:var(--bad); }
+.topbar .queue{ display:flex; align-items:center; gap:1.2vw; }
+.badge{ background:rgba(255,255,255,.14); padding:.5vh 1.2vw; border-radius:999px; font-size:2.2vh; }
+.ver{ color:var(--sub); font-size:1.9vh; }
+
+/* 主区 */
+#stage{ height:92vh; display:flex; align-items:center; justify-content:center; padding:3vh 4vw; }
+.view{ width:100%; max-width:1100px; text-align:center; }
+
+/* 空闲 */
+.scan-hint .icon{ font-size:16vh; color:var(--sub); line-height:1; }
+.big-hint{ font-size:9vh; font-weight:800; margin-top:1vh; }
+.sub-hint{ font-size:2.8vh; color:var(--sub); margin-top:1.5vh; }
+
+/* 签退 */
+.so-driver{ font-size:5vh; font-weight:800; margin-bottom:1vh; }
+.so-line{ display:block; font-size:2.8vh; font-weight:500; opacity:.85; margin-top:.5vh; }
+.counts{ display:flex; gap:2.5vw; justify-content:center; margin:3vh 0 1.5vh; }
+.count{ background:rgba(255,255,255,.10); border-radius:2vh; padding:3vh 3vw; min-width:22%; }
+.count .c-num{ font-size:11vh; font-weight:900; line-height:1; }
+.count .c-lbl{ font-size:2.8vh; margin-top:1vh; opacity:.9; }
+.count.wrong .c-num{ color:#ffd7d7; }
+.diff-row{ font-size:3.4vh; margin-top:1vh; }
+.diff-row b{ font-size:4vh; }
+.diff-row .tag{ display:inline-block; margin-left:1.5vw; font-size:2.6vh; opacity:.85; }
+
+.action-bar{ margin-top:3vh; }
+.block-note{ font-size:3vh; font-weight:700; margin-bottom:2vh; }
+.btns{ display:flex; gap:3vw; justify-content:center; }
+.btn{ font-size:5vh; font-weight:800; border:0; border-radius:2vh; padding:3vh 6vw; color:#fff; cursor:pointer; }
+.btn.pass{ background:var(--ok); }
+.btn.reject{ background:var(--bad); }
+.btn:active{ transform:scale(.97); }
+.done-note{ font-size:4vh; font-weight:800; margin-top:3vh; }
+
+/* 打印 */
+.print-title{ font-size:6vh; font-weight:800; }
+.print-way{ font-size:5vh; font-weight:700; letter-spacing:2px; margin:2vh 0; font-family:"Consolas",monospace; }
+.print-status{ font-size:3.4vh; color:var(--sub); }
+
+/* 错误 */
+.err-icon{ width:16vh; height:16vh; border-radius:50%; background:var(--bad); color:#fff;
+  font-size:11vh; font-weight:900; display:flex; align-items:center; justify-content:center; margin:0 auto 3vh; }
+.err-msg{ font-size:4.5vh; font-weight:700; }
+
+/* ---- 整屏配色（强弱提醒） ---- */
+body.state-ok{ background:#0f1620; }
+body.state-weak{ background:var(--warn); color:#241c00; }
+body.state-weak .count{ background:rgba(0,0,0,.10); }
+body.state-weak .sub-hint,body.state-weak .so-line,body.state-weak .dot{ color:#3a2e00; }
+body.state-strong{ background:var(--bad); color:#fff; }
+body.state-strong .count{ background:rgba(0,0,0,.16); }
+body.state-strong .count.wrong .c-num{ color:#fff; }
+body.state-print{ background:#0b1220; }
+body.state-error{ background:#2a1113; }
+
+/* 弱/强下顶栏文字对比 */
+body.state-weak .topbar{ border-color:rgba(0,0,0,.15); }
+body.state-strong .badge{ background:rgba(0,0,0,.2); }

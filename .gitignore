@@ -1,0 +1,8 @@
+data/
+chrome-profile/
+__pycache__/
+*.pyc
+server.log
+cj.txt
+static/_label_preview.html
+_update_tmp/
