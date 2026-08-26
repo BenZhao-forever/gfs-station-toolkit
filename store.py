@@ -52,7 +52,7 @@ DEFAULT_SETTINGS = {
     "serial_baud": 9600,
     # 自动更新
     "auto_update": True,
-    "update_repo": "",         # 形如 "owner/repo"（公开仓库）
+    "update_repo": "BenZhao-forever/gfs-station-toolkit",  # 公开仓库，可在后台改
 }
 
 DEFAULT_CONFIG = {
