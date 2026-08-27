@@ -21,9 +21,10 @@ import requests
 WEB_BASE_URL = "https://dms.gofoexpress.com/prod-api"
 GET_LABEL_PATH = "/ops/scan/labelReplace/getLabelInfo"
 
-# TODO(抓包待填)：DMS 网页版登录接口。抓到后填路径与请求/响应字段。
-# 典型 RuoYi 框架为 POST /login，返回 {"code":200,"token":"..."}；部分部署带验证码。
-WEB_LOGIN_PATH = None
+# DMS 网页版（RuoYi 框架）：登录带图形验证码。
+CAPTCHA_PATH = "/captchaImage"     # GET → {code,uuid,img(base64 jpeg)}
+WEB_LOGIN_PATH = "/login"          # POST {username,password,code,uuid} → {code,token}
+GETINFO_PATH = "/getInfo"          # GET（带 token）→ 保活 / 校验 token 是否有效
 
 SUCCESS_CODE = 200
 DEFAULT_TIMEZONE = "America/Los_Angeles"
@@ -77,16 +78,60 @@ class DmsWebClient:
             h["Authorization"] = av
         return h
 
-    # ---------- 登录（待抓包） ----------
-    def login(self):
-        if not WEB_LOGIN_PATH:
-            raise NotImplementedError(
-                "网页版登录接口尚未接入（等待抓包）。当前请用 set_token() 提供临时 token。"
-            )
+    # ---------- 登录（图形验证码） ----------
+    def get_captcha(self):
+        """取一张登录验证码。返回 {"uuid","img"}，img 为可直接放 <img src> 的 data URL。"""
+        r = self._session.get(WEB_BASE_URL + CAPTCHA_PATH, timeout=self.timeout)
+        r.raise_for_status()
+        d = r.json()
+        img = d.get("img") or ""
+        if img and not img.startswith("data:"):
+            img = "data:image/jpeg;base64," + img
+        return {"uuid": d.get("uuid") or "", "img": img}
+
+    def login_with_captcha(self, code, uuid):
+        """用保存的账号密码 + 验证码登录，成功则缓存 token。返回 (ok, msg)。"""
         if not self.username or not self.password:
-            raise WebAuthError("缺少网页版账号或密码。")
-        # 抓包确认后在此实现：POST WEB_BASE_URL + WEB_LOGIN_PATH
-        raise NotImplementedError("WEB_LOGIN_PATH 已配置但登录逻辑待补全。")
+            return False, "未配置 DMS 账号密码"
+        if not code or not uuid:
+            return False, "请填写验证码"
+        body = {
+            "username": self.username, "password": self.password,
+            "code": code, "uuid": uuid,
+        }
+        r = self._session.post(WEB_BASE_URL + WEB_LOGIN_PATH, json=body, timeout=self.timeout)
+        r.raise_for_status()
+        try:
+            d = r.json()
+        except ValueError:
+            return False, "登录响应不是合法 JSON"
+        if d.get("code") != SUCCESS_CODE:
+            return False, d.get("msg") or "登录失败"
+        token = d.get("token")
+        if not token:
+            return False, "登录成功但没拿到 token"
+        self.set_token(token)
+        return True, "登录成功，打印 token 已获取"
+
+    def keepalive(self):
+        """用 getInfo 校验/续期 token。返回 True=有效，False=已失效需重新登录。"""
+        if not self.has_token:
+            return False
+        try:
+            r = self._session.get(
+                WEB_BASE_URL + GETINFO_PATH, headers=self._headers(), timeout=self.timeout)
+        except Exception:
+            return True  # 网络抖动不当作失效
+        if r.status_code in (401, 403):
+            return False
+        try:
+            return r.json().get("code") == SUCCESS_CODE
+        except Exception:
+            return r.status_code == 200
+
+    def login(self):
+        # 网页版登录需验证码，无法无人值守自动登录；改用 login_with_captcha()。
+        raise WebAuthError("网页版登录需图形验证码，请在后台「打印」页在线登录获取 token。")
 
     def ensure_token(self):
         if not self.has_token:
@@ -111,10 +156,7 @@ class DmsWebClient:
             timeout=self.timeout,
         )
         if resp.status_code in (401, 403):
-            if allow_relogin and WEB_LOGIN_PATH:
-                self.login()
-                return self._get_label_once(scan_number, allow_relogin=False)
-            raise WebAuthError("网页版 token 失效，请在后台重新登录/更新打印 token。")
+            raise WebAuthError("网页版 token 已失效，请在后台「打印」页在线登录重新获取。")
         resp.raise_for_status()
         try:
             data = resp.json()
@@ -122,10 +164,7 @@ class DmsWebClient:
             return False, "查单响应不是合法 JSON。"
         code = data.get("code")
         if code == 401:
-            if allow_relogin and WEB_LOGIN_PATH:
-                self.login()
-                return self._get_label_once(scan_number, allow_relogin=False)
-            raise WebAuthError("网页版 token 失效，请在后台重新登录/更新打印 token。")
+            raise WebAuthError("网页版 token 已失效，请在后台「打印」页在线登录重新获取。")
         if code != SUCCESS_CODE:
             return False, data.get("msg") or "查单失败"
         rows = data.get("data") or []

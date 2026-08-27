@@ -330,6 +330,29 @@ class Worker:
 worker = Worker()
 
 
+def _print_token_keepalive():
+    """定期用 getInfo 续期打印 token，避免空闲时过期。失效则记日志（需人工重新在线登录）。"""
+    warned = False
+    while True:
+        time.sleep(600)  # 每 10 分钟
+        try:
+            if not store.get_print_token():
+                continue
+            web = web_client()
+            alive = web.keepalive()
+            if alive:
+                warned = False
+            elif not warned:
+                warned = True
+                store.append_log({"kind": "print_token_expired",
+                                  "message": "打印 token 已失效，请到后台「打印」页在线重新登录"})
+        except Exception:
+            pass
+
+
+threading.Thread(target=_print_token_keepalive, daemon=True).start()
+
+
 # ================================================================= 页面
 @app.route("/")
 def root():
@@ -525,6 +548,39 @@ def admin_set_print_token():
     store.set_print_token(b.get("token") or "")
     _invalidate_clients()
     return jsonify({"ok": True})
+
+
+@app.route("/api/admin/print-login/captcha")
+def admin_print_captcha():
+    """取一张 DMS 网页版登录验证码，供后台在线登录获取打印 token。"""
+    if not _require_admin():
+        return jsonify({"ok": False, "message": "未登录"}), 403
+    web = web_client()
+    try:
+        cap = web.get_captcha()
+    except Exception as e:  # noqa
+        return jsonify({"ok": False, "message": f"取验证码失败：{e}"}), 200
+    return jsonify({"ok": True, **cap})
+
+
+@app.route("/api/admin/print-login", methods=["POST"])
+def admin_print_login():
+    """用已保存的 DMS 账号密码 + 验证码在线登录，拿到打印 token 并保存。"""
+    if not _require_admin():
+        return jsonify({"ok": False, "message": "未登录"}), 403
+    dms = store.get_dms()
+    if not dms.get("username") or not dms.get("has_password"):
+        return jsonify({"ok": False, "message": "请先在「DMS 账号」保存账号密码"}), 200
+    b = request.get_json(silent=True) or {}
+    web = web_client()
+    try:
+        ok, msg = web.login_with_captcha(b.get("code"), b.get("uuid"))
+    except Exception as e:  # noqa
+        return jsonify({"ok": False, "message": f"登录异常：{e}"}), 200
+    if ok:
+        store.set_print_token(web._token)
+        _invalidate_clients()
+    return jsonify({"ok": ok, "message": msg})
 
 
 @app.route("/api/admin/print-token/test", methods=["POST"])

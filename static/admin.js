@@ -79,6 +79,29 @@
 
   // ---------- 打印 token ----------
   function loadPrint(){ /* token 不回显，仅可覆盖 */ }
+
+  var capUuid = "";
+  function loadCaptcha(){
+    msg($("login-msg"), "获取验证码中…");
+    api("/api/admin/print-login/captcha").then(function(d){
+      if(!d.ok){ msg($("login-msg"), d.message||"取验证码失败", false); return; }
+      capUuid = d.uuid;
+      var img=$("cap-img"); img.src=d.img; img.style.display="inline-block";
+      $("cap-code").style.display="inline-block"; $("cap-login").style.display="inline-block";
+      $("cap-code").value=""; $("cap-code").focus();
+      msg($("login-msg"), "请输入图中验证码后点「登录并保存 token」");
+    });
+  }
+  $("cap-get").addEventListener("click", loadCaptcha);
+  $("cap-img").addEventListener("click", loadCaptcha);   // 点图换一张
+  $("cap-login").addEventListener("click", function(){
+    msg($("login-msg"), "登录中…");
+    post("/api/admin/print-login", { code:$("cap-code").value, uuid:capUuid }).then(function(d){
+      msg($("login-msg"), d.message, d.ok);
+      if(!d.ok) loadCaptcha();   // 失败自动换一张验证码
+    });
+  });
+  $("cap-code").addEventListener("keydown", function(e){ if(e.key==="Enter") $("cap-login").click(); });
   $("token-save").addEventListener("click", function(){
     post("/api/admin/print-token", { token: $("print-token").value }).then(function(d){
       msg($("print-msg"), d.ok?"token 已保存":"保存失败", d.ok);
