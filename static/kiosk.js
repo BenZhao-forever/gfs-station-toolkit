@@ -2,7 +2,8 @@
 (function () {
   "use strict";
   var UI = { strong_diff: 5, weak_diff: 1, sound_on_strong: true,
-             label_width_mm: 100, label_height_mm: 150, printer_name: "" };
+             label_width_mm: 100, label_height_mm: 150, printer_name: "",
+             print_engine: "chrome" };
   var lastJobId = null;
   var soundedFor = {};      // 已播过的“声音”键：jobId + ':' + name
   var printedFor = {};      // 已送打印的 job id
@@ -128,32 +129,39 @@
     }
   }
 
-  // 官方面单图片打印（首选，用免授权的 ADD_PRINT_HTM 打 <img>）
+  // 官方面单图片打印。默认走浏览器静默打印（免费无水印）；选 clodop 时用 CLodop。
   function doPrintImage(jobId, dataurl){
     var w = UI.label_width_mm, h = UI.label_height_mm;
-    var html = '<img src="' + dataurl + '" style="width:' + w + 'mm;height:' + h + 'mm;display:block">';
-    GofoPrint.printLabelHtml(html, {
-      widthMM: w, heightMM: h, printerName: UI.printer_name
-    }, function(ok, err){
+    function cb(ok, err){
       $("print-status").textContent = ok ? "✓ 已送打印" : ("打印失败：" + err);
       finishPrint(jobId, ok, err);
-    });
+    }
+    if (UI.print_engine === "clodop"){
+      var html = '<img src="' + dataurl + '" style="width:' + w + 'mm;height:' + h + 'mm;display:block">';
+      GofoPrint.printLabelHtml(html, { widthMM:w, heightMM:h, printerName:UI.printer_name }, cb);
+    } else {
+      GofoPrint.printImageNative(dataurl, { widthMM:w, heightMM:h }, cb);
+    }
   }
 
   // ---------------- CLodop 打印（自排版兜底） ----------------
   function doPrint(jobId, label){
     var frame = $("labelframe");
     function afterRender(){
-      var html;
-      try { html = frame.contentWindow.document.documentElement.outerHTML; }
-      catch(e){ finishPrint(jobId, false, "无法读取面单内容"); return; }
-      GofoPrint.printLabelHtml(html, {
-        widthMM: UI.label_width_mm, heightMM: UI.label_height_mm,
-        printerName: UI.printer_name
-      }, function(ok, err){
+      function cb(ok, err){
         $("print-status").textContent = ok ? "✓ 已送打印" : ("打印失败：" + err);
         finishPrint(jobId, ok, err);
-      });
+      }
+      if (UI.print_engine === "clodop"){
+        var html;
+        try { html = frame.contentWindow.document.documentElement.outerHTML; }
+        catch(e){ finishPrint(jobId, false, "无法读取面单内容"); return; }
+        GofoPrint.printLabelHtml(html, {
+          widthMM: UI.label_width_mm, heightMM: UI.label_height_mm, printerName: UI.printer_name
+        }, cb);
+      } else {
+        GofoPrint.printFrameNative(frame, cb);   // 浏览器静默打印 iframe
+      }
     }
     try {
       frame.contentWindow.renderLabel(label);

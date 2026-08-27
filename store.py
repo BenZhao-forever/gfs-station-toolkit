@@ -46,7 +46,8 @@ DEFAULT_SETTINGS = {
     # 自动放行：应领-实领 差值 < auto_pass_diff 且无错扫、实领>0 时，自动放行（免人工）
     "auto_pass_diff": 3,
     # 打印
-    "printer_name": "",        # CLodop 打印机名，空 = 默认打印机
+    "print_engine": "chrome",  # chrome=浏览器静默打印(免费,推荐) / clodop=CLodop(未注册会有水印页)
+    "printer_name": "",        # 仅 CLodop 引擎用；chrome 引擎用系统默认打印机
     "label_width_mm": 100,
     "label_height_mm": 150,
     # 串口扫码枪（USB-COM）。留空则只接受键盘/网页输入。

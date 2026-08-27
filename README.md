@@ -74,8 +74,13 @@ PDA 端 `https://dms-public-api.gofoexpress.com`（复用签到项目鉴权，�
 | 面单字段（自排版兜底） | POST | `/ops/scan/labelReplace/getLabelInfo`（`{scanNumber}`） |
 
 **打印首选官方 PDF**：`/waybill/list` 拿内部 id → `/waybill/batchPrint` 拿 DMS 官方渲染的 4×6" 面单
-PDF（S3 预签名链接，含所有版式），交 CLodop `ADD_PRINT_PDF` 打印。取不到时自动兜底用
-`getLabelInfo` 的字段本地排版打印。
+PDF（S3 预签名链接，含所有版式）→ 后端 PyMuPDF 渲染成 PNG → **浏览器静默打印**。取不到时兜底用
+`getLabelInfo` 字段本地排版。
+
+**打印引擎（后台可选）**：
+- `chrome`（默认，免费）：Chrome `--kiosk-printing` 静默打印到**系统默认打印机**，无弹窗、无水印。
+  → 请把标签打印机设为**默认打印机**。
+- `clodop`：走 CLodop。未购买授权会**每单多打一张“试用版”水印页**，一般不用。
 
 DMS 网页登录（RuoYi 框架，带图形验证码）：`GET /captchaImage` 取图 → `ddddocr` 本地识别 →
 密码 **AES-CBC 加密**（key=iv=`59SO+p2dXTeghIqm`）→ `POST /login {username,password,code,uuid}`

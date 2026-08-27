@@ -467,6 +467,7 @@ def api_state():
             "label_width_mm": s["label_width_mm"],
             "label_height_mm": s["label_height_mm"],
             "printer_name": s["printer_name"],
+            "print_engine": s["print_engine"],
         },
     })
 

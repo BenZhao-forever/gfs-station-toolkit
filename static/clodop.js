@@ -90,6 +90,49 @@
     });
   }
 
+  /**
+   * 浏览器静默打印一张图（免费，无水印）。配合 Chrome 的 --kiosk-printing 直接打到默认打印机。
+   * 用隐藏 iframe 承载「只有这张图 + @page 尺寸」的文档，再调用其 print()。
+   */
+  function printImageNative(dataurl, opt, done) {
+    opt = opt || {};
+    var w = opt.widthMM || 100, h = opt.heightMM || 150;
+    var html = '<!doctype html><html><head><meta charset="utf-8"><style>'
+      + '@page{size:' + w + 'mm ' + h + 'mm;margin:0}'
+      + 'html,body{margin:0;padding:0}'
+      + 'img{width:' + w + 'mm;height:' + h + 'mm;display:block}'
+      + '</style></head><body><img src="' + dataurl + '"></body></html>';
+    var ifr = document.createElement("iframe");
+    ifr.setAttribute("aria-hidden", "true");
+    ifr.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
+    document.body.appendChild(ifr);
+    var fired = false;
+    function fire() {
+      if (fired) return; fired = true;
+      try {
+        ifr.contentWindow.focus();
+        ifr.contentWindow.print();
+        setTimeout(function () { try { document.body.removeChild(ifr); } catch (e) {} }, 4000);
+        done(true, "");
+      } catch (e) { done(false, "打印异常：" + e); }
+    }
+    ifr.onload = function () { setTimeout(fire, 250); };
+    try { ifr.srcdoc = html; } catch (e) {
+      var d = ifr.contentWindow.document; d.open(); d.write(html); d.close();
+    }
+    setTimeout(fire, 1500);  // 兜底：onload 未触发也打印
+  }
+
+  /** 静默打印一个已渲染好的 iframe（自排版兜底用）。 */
+  function printFrameNative(frame, done) {
+    try {
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
+      done(true, "");
+    } catch (e) { done(false, "打印异常：" + e); }
+  }
+
   window.GofoPrint = { getLodop: getLodop, whenReady: whenReady,
-    printLabelHtml: printLabelHtml, printPdf: printPdf };
+    printLabelHtml: printLabelHtml, printPdf: printPdf,
+    printImageNative: printImageNative, printFrameNative: printFrameNative };
 })();

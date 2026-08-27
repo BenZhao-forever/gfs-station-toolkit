@@ -109,12 +109,20 @@
         </div>
         <p class="muted small">应领−实领 &lt; 此值、且无错扫、实领&gt;0 时自动放行并播“签退成功”。
           实领为 0 时不自动放行、播“请先收件”等人工处理。</p>
-        <h3>面单尺寸 / 打印机</h3>
+        <h3>打印方式 / 面单尺寸</h3>
         <div class="grid">
+          <label>打印引擎
+            <select id="s-engine">
+              <option value="chrome">浏览器静默打印（免费，无水印，推荐）</option>
+              <option value="clodop">CLodop（未注册会多打一张水印页）</option>
+            </select>
+          </label>
           <label>面单宽(mm) <input id="s-lw" type="number"></label>
           <label>面单高(mm) <input id="s-lh" type="number"></label>
-          <label>打印机名（空=默认打印机）<input id="s-printer" placeholder="CLodop 打印机名"></label>
+          <label>打印机名（仅 CLodop 用；空=默认）<input id="s-printer" placeholder="CLodop 打印机名"></label>
         </div>
+        <p class="muted small">浏览器静默打印用系统<b>默认打印机</b>，请把标签打印机设为默认；由 run.bat 的
+          <code>--kiosk-printing</code> 实现免弹窗。CLodop 需购买授权才能去掉“试用版”水印页。</p>
         <div class="row"><button id="alert-save">保存</button><span class="msg" id="alert-msg"></span></div>
         <p class="muted small">强提醒：红底 + 声音 + 需放行；弱提醒：黄底。数对不上或有错扫都需人工放行/拒绝，队列暂停直到处理。</p>
       </section>
