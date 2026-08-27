@@ -18,6 +18,20 @@
   $("login-btn").addEventListener("click", doLogin);
   $("login-pw").addEventListener("keydown", function(e){ if(e.key==="Enter") doLogin(); });
 
+  // 虚拟数字键盘（触屏无实体键盘）
+  var keypad = $("keypad");
+  if (keypad){
+    keypad.addEventListener("click", function(e){
+      var b = e.target.closest ? e.target.closest("button[data-k]") : null;
+      if (!b) return;
+      var k = b.getAttribute("data-k"); var pw = $("login-pw");
+      if (k === "del") pw.value = pw.value.slice(0, -1);
+      else if (k === "clr") pw.value = "";
+      else pw.value += k;
+      $("login-err").textContent = "";
+    });
+  }
+
   function enter(){
     $("login").classList.add("hidden");
     $("app").classList.remove("hidden");

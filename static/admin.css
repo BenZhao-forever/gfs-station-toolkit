@@ -21,6 +21,13 @@ code{ background:#eef2f7; padding:1px 5px; border-radius:4px; font-family:monosp
 .login-card button{ width:100%; padding:12px; background:var(--accent); color:#fff; border:0;
   border-radius:10px; font-size:16px; cursor:pointer; }
 .login-card .err{ color:var(--bad); min-height:20px; margin-top:8px; }
+.keypad{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:14px 0 6px; }
+.keypad button{ padding:20px 0; font-size:24px; font-weight:600; background:#f1f4f8;
+  color:var(--ink); border:1px solid var(--line); border-radius:12px; cursor:pointer;
+  -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
+.keypad button:active{ background:#dbe3ee; }
+.keypad button.alt{ font-size:17px; font-weight:500; color:var(--muted); }
+.login-card button.big{ padding:16px; font-size:19px; }
 
 /* 头 */
 .hd{ display:flex; align-items:center; gap:20px; padding:0 24px; height:60px;

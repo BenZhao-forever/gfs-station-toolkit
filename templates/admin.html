@@ -14,10 +14,24 @@
     <div class="login-card">
       <h1>站点工具包 · 后台</h1>
       <p class="muted">本机管理员登录</p>
-      <input type="password" id="login-pw" placeholder="管理员密码">
-      <button id="login-btn">登录</button>
+      <input type="password" id="login-pw" placeholder="管理员密码" inputmode="none" autocomplete="off">
+      <div class="keypad" id="keypad">
+        <button type="button" data-k="1">1</button>
+        <button type="button" data-k="2">2</button>
+        <button type="button" data-k="3">3</button>
+        <button type="button" data-k="4">4</button>
+        <button type="button" data-k="5">5</button>
+        <button type="button" data-k="6">6</button>
+        <button type="button" data-k="7">7</button>
+        <button type="button" data-k="8">8</button>
+        <button type="button" data-k="9">9</button>
+        <button type="button" data-k="clr" class="alt">清空</button>
+        <button type="button" data-k="0">0</button>
+        <button type="button" data-k="del" class="alt">删除</button>
+      </div>
+      <button id="login-btn" class="big">登录</button>
       <div class="err" id="login-err"></div>
-      <div class="muted small">默认密码 admin123，登录后请到「安全」修改</div>
+      <div class="muted small">默认密码 1111，登录后可到「安全」修改</div>
     </div>
   </div>
 

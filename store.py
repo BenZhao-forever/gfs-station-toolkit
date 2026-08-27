@@ -34,7 +34,8 @@ DATA_DIR = os.environ.get("STATION_DATA_DIR") or os.path.join(BASE_DIR, "data")
 CONFIG_PATH = os.path.join(DATA_DIR, "config.json")
 ENCKEY_PATH = os.path.join(DATA_DIR, ".enckey")
 
-DEFAULT_ADMIN_PASSWORD = os.environ.get("DEFAULT_ADMIN_PASSWORD", "admin123")
+DEFAULT_ADMIN_PASSWORD = os.environ.get("DEFAULT_ADMIN_PASSWORD", "1111")
+OLD_DEFAULT_PASSWORDS = ["admin123"]   # 老默认密码，仍停在这些上的机器自动迁移到新默认
 MAX_LOGS = 500
 
 DEFAULT_SETTINGS = {
@@ -130,6 +131,13 @@ class Store:
         if not data.get("admin_password_hash"):
             data["admin_password_hash"] = generate_password_hash(DEFAULT_ADMIN_PASSWORD)
             changed = True
+        else:
+            # 迁移：仍停在老默认密码的机器，自动改成新默认（不动自定义密码）
+            for oldpw in OLD_DEFAULT_PASSWORDS:
+                if check_password_hash(data["admin_password_hash"], oldpw):
+                    data["admin_password_hash"] = generate_password_hash(DEFAULT_ADMIN_PASSWORD)
+                    changed = True
+                    break
         if not data.get("secret_key"):
             data["secret_key"] = secrets.token_hex(32)
             changed = True
