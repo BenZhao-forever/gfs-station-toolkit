@@ -221,6 +221,11 @@
     });
   }
   $("logs-refresh").addEventListener("click", loadLogs);
+  $("logs-download").addEventListener("click", function(){
+    var a=document.createElement("a");
+    a.href="/api/admin/logs/download"; a.download="";
+    document.body.appendChild(a); a.click(); a.remove();
+  });
 
   // ---------- 改密码 ----------
   $("pw-save").addEventListener("click", function(){

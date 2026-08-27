@@ -735,6 +735,29 @@ def admin_logs():
     return jsonify({"ok": True, "logs": store.read_logs(limit)})
 
 
+@app.route("/api/admin/logs/download")
+def admin_logs_download():
+    if not _require_admin():
+        return jsonify({"ok": False, "message": "未登录"}), 403
+    import json as _json
+    logs = store.read_logs(limit=100000)   # 全部（最多 MAX_LOGS 条）
+    dms = store.get_dms()
+    payload = {
+        "site": dms.get("name") or dms.get("site_perm") or dms.get("username") or "",
+        "exported_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "version": APP_VERSION,
+        "count": len(logs),
+        "logs": logs,
+    }
+    body = _json.dumps(payload, ensure_ascii=False, indent=2)
+    site_tag = (payload["site"] or "station").replace(" ", "_")
+    fname = "gofo-logs-%s-%s.json" % (site_tag, time.strftime("%Y%m%d-%H%M%S"))
+    return Response(
+        body, mimetype="application/json; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="%s"' % fname},
+    )
+
+
 # ---------------- 更新
 @app.route("/api/admin/version")
 def admin_version():
