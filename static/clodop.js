@@ -67,5 +67,29 @@
     });
   }
 
-  window.GofoPrint = { getLodop: getLodop, whenReady: whenReady, printLabelHtml: printLabelHtml };
+  /**
+   * 打印一个 PDF（url 或 base64）。CLodop 用 ADD_PRINT_PDF。
+   * @param {string} pdf   PDF 的 URL，或 base64（不含 data: 前缀时会自动加）
+   * @param {object} opt   { widthMM, heightMM, printerName }
+   * @param {function} done callback(ok, errMsg)
+   */
+  function printPdf(pdf, opt, done) {
+    opt = opt || {};
+    whenReady(function (LODOP) {
+      if (!LODOP) { done(false, "未检测到 CLodop 打印服务，请确认已安装并运行"); return; }
+      try {
+        LODOP.PRINT_INIT("GOFO面单");
+        LODOP.SET_PRINT_PAGESIZE(1, (opt.widthMM || 100) + "mm", (opt.heightMM || 150) + "mm", "");
+        if (opt.printerName) { try { LODOP.SET_PRINTER_INDEXA(opt.printerName); } catch (e) {} }
+        LODOP.ADD_PRINT_PDF(0, 0, (opt.widthMM || 100) + "mm", (opt.heightMM || 150) + "mm", pdf);
+        var r = LODOP.PRINT();
+        done(r !== false, r === false ? "打印被取消或失败" : "");
+      } catch (e) {
+        done(false, "打印异常：" + e);
+      }
+    });
+  }
+
+  window.GofoPrint = { getLodop: getLodop, whenReady: whenReady,
+    printLabelHtml: printLabelHtml, printPdf: printPdf };
 })();

@@ -62,11 +62,22 @@ PDA 端 `https://dms-public-api.gofoexpress.com`（复用签到项目鉴权，�
 签退返回体 `StaSignScanResp` 关键字段：`beReceiveCount`(应取) / `receivedCount`(实取) /
 `wrongScanWaybillCount`(错扫) / `returnCount` / `signResult`(1成功) / `signRecordId` / `driverUserId`。
 
-网页版 `https://dms.gofoexpress.com/prod-api`（需 `Authorization: Bearer <JWT>`）：
+网页版 `https://dms.gofoexpress.com/prod-api`（需 `Authorization: Bearer <JWT>`，登录带验证码见下）：
 
 | 用途 | 方法 | 路径 |
 |---|---|---|
-| 换单打印查单 | POST | `/ops/scan/labelReplace/getLabelInfo`（`{scanNumber}`） |
+| 单号 → 内部 waybillId | POST | `/waybill/list`（`{waybillNo}` → `rows[0].id`） |
+| **官方面单 PDF（打印用）** | POST | `/waybill/batchPrint`（`{waybillIds:[id],waybillType:1}` → `data[0].url` = S3 PDF） |
+| 面单字段（自排版兜底） | POST | `/ops/scan/labelReplace/getLabelInfo`（`{scanNumber}`） |
+
+**打印首选官方 PDF**：`/waybill/list` 拿内部 id → `/waybill/batchPrint` 拿 DMS 官方渲染的 4×6" 面单
+PDF（S3 预签名链接，含所有版式），交 CLodop `ADD_PRINT_PDF` 打印。取不到时自动兜底用
+`getLabelInfo` 的字段本地排版打印。
+
+DMS 网页登录（RuoYi 框架，带图形验证码）：`GET /captchaImage` 取图 → `ddddocr` 本地识别 →
+密码 **AES-CBC 加密**（key=iv=`59SO+p2dXTeghIqm`）→ `POST /login {username,password,code,uuid}`
+→ `GET /getInfo`（必调，否则接口"200 但空数据"）。装了 ddddocr 即全自动、过期自动重登；
+装不上（如 Win7 的 onnxruntime）则后台手动输一次验证码。
 
 **待后续更新的接口**（已反编译到，供扩展）：
 - 扫描查单：`gfs-site/appWaybillScanQuery/scanQuery/v2`

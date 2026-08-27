@@ -14,8 +14,10 @@ echo Installing / updating dependencies...
 python -m pip install -q -r requirements.txt
 REM Optional extras. Skipped silently if they fail (e.g. onnxruntime on Windows 7).
 REM   cryptography = at-rest password encryption
+REM   PyMuPDF      = render official label PDF to image for license-free printing
 REM   ddddocr      = local captcha OCR for fully-automatic print-token login
 python -m pip install -q cryptography >nul 2>nul
+python -m pip install -q PyMuPDF >nul 2>nul
 python -m pip install -q ddddocr >nul 2>nul
 
 REM Open fullscreen kiosk after 3s (auto-detects Chrome/Edge; safe if none).

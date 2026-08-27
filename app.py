@@ -296,21 +296,36 @@ class Worker:
             job.error = "未配置打印 token，请在后台设置"
             store.append_log({"kind": "print_no_token", "code": job.code})
             return
+        # 首选：官方面单 PDF 渲染成图（batchPrint + PyMuPDF，免 CLodop PDF 授权）。
+        # 失败再兜底自排版（getLabelInfo）。
         try:
-            ok, data = web.get_label_info(job.code)
+            ok, info = web.get_print_image(job.code)
         except WebAuthError as e:
             job.status = "error"
             job.error = str(e)
             store.append_log({"kind": "print_auth_error", "code": job.code, "error": str(e)})
             return
-        if not ok:
-            job.status = "error"
-            job.error = data
-            store.append_log({"kind": "print_query_fail", "code": job.code, "error": data})
-            return
+        except Exception as e:  # noqa
+            ok, info = False, str(e)
 
-        job.result = {"label": data}
-        job.message = f"打印面单 {data.get('waybillNo') or job.code}"
+        if ok:
+            job.result = {"image_b64": info["image_b64"], "waybillNo": info["waybillNo"]}
+            job.message = f"打印面单 {info['waybillNo']}"
+        else:
+            # 兜底：查字段自排版
+            try:
+                ok2, data = web.get_label_info(job.code)
+            except WebAuthError as e:
+                job.status = "error"; job.error = str(e)
+                store.append_log({"kind": "print_auth_error", "code": job.code, "error": str(e)})
+                return
+            if not ok2:
+                job.status = "error"; job.error = info or data
+                store.append_log({"kind": "print_query_fail", "code": job.code,
+                                  "error": info, "fallback_error": data})
+                return
+            job.result = {"label": data}
+            job.message = f"打印面单 {data.get('waybillNo') or job.code}（自排版）"
         job.status = "printing"
         # 等大屏 CLodop 打印回执（90s 超时，避免大屏未开时永久卡队列）
         action = self._wait_action(job, ("print_done",), timeout=90)
@@ -321,7 +336,9 @@ class Worker:
             return
         if action.get("ok"):
             job.status = "done"
-            job.message = f"已打印 {data.get('waybillNo') or job.code}"
+            res = job.result or {}
+            wb = res.get("waybillNo") or (res.get("label") or {}).get("waybillNo") or job.code
+            job.message = f"已打印 {wb}"
         else:
             job.status = "error"
             job.error = action.get("error") or "打印失败"

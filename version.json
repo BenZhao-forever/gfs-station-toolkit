@@ -1,4 +1,4 @@
 {
   "version": "1.2.0",
-  "notes": "打印 token 全自动登录：ddddocr 识别验证码 + AES 加密密码 + getInfo；过期自动重登，无人值守"
+  "notes": "打印改用 DMS 官方面单：waybill/list+batchPrint 取官方 PDF，本地渲染成图用免授权方式打印（绕开 CLodop PDF 付费授权）；自排版作兜底"
 }

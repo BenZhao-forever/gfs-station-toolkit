@@ -99,19 +99,33 @@
 
   function renderPrint(job){
     show("print"); setBodyState("print");
-    var label = (job.result && job.result.label) || {};
+    var res = job.result || {};
+    var label = res.label || {};
     $("print-title").textContent = "打印面单";
-    $("print-way").textContent = label.waybillNo || job.code || "";
+    $("print-way").textContent = res.waybillNo || label.waybillNo || job.code || "";
     if (job.status === "printing" && !printedFor[job.id]){
       printedFor[job.id] = true;
       $("print-status").textContent = "正在送打印…";
-      doPrint(job.id, label);
+      if (res.image_b64){ doPrintImage(job.id, res.image_b64); }
+      else { doPrint(job.id, label); }
     } else if (job.status === "done"){
       $("print-status").textContent = "✓ " + (job.message || "已打印");
     }
   }
 
-  // ---------------- CLodop 打印 ----------------
+  // 官方面单图片打印（首选，用免授权的 ADD_PRINT_HTM 打 <img>）
+  function doPrintImage(jobId, dataurl){
+    var w = UI.label_width_mm, h = UI.label_height_mm;
+    var html = '<img src="' + dataurl + '" style="width:' + w + 'mm;height:' + h + 'mm;display:block">';
+    GofoPrint.printLabelHtml(html, {
+      widthMM: w, heightMM: h, printerName: UI.printer_name
+    }, function(ok, err){
+      $("print-status").textContent = ok ? "✓ 已送打印" : ("打印失败：" + err);
+      finishPrint(jobId, ok, err);
+    });
+  }
+
+  // ---------------- CLodop 打印（自排版兜底） ----------------
   function doPrint(jobId, label){
     var frame = $("labelframe");
     function afterRender(){

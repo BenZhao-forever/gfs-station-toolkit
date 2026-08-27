@@ -34,9 +34,24 @@ except Exception:
     AES = None
     pad = None
 
+# 把官方面单 PDF 渲染成图（用免授权的 ADD_PRINT_IMAGE/HTM 打印，绕开 CLodop 的 PDF 付费授权）
+try:
+    import pymupdf as _fitz
+except Exception:
+    try:
+        import fitz as _fitz
+    except Exception:
+        _fitz = None
+
+
+def pdf_render_available():
+    return _fitz is not None
+
 
 WEB_BASE_URL = "https://dms.gofoexpress.com/prod-api"
-GET_LABEL_PATH = "/ops/scan/labelReplace/getLabelInfo"
+GET_LABEL_PATH = "/ops/scan/labelReplace/getLabelInfo"   # 备用：返回面单字段（自排版兜底）
+WAYBILL_LIST_PATH = "/waybill/list"                       # 单号 → 内部 waybillId
+BATCH_PRINT_PATH = "/waybill/batchPrint"                  # waybillId → 官方面单 PDF（S3 url）
 
 # DMS 网页版（RuoYi 框架）：登录带图形验证码。
 CAPTCHA_PATH = "/captchaImage"     # GET → {code,uuid,img(base64 jpeg)}
@@ -232,7 +247,79 @@ class DmsWebClient:
         if not self.has_token:
             self.login()
 
-    # ---------- 查单（取面单数据） ----------
+    # ---------- 通用带鉴权 POST（401 自动重登一次） ----------
+    def _authed_post(self, path, body, allow_relogin=True):
+        self.ensure_token()
+        resp = self._session.post(
+            WEB_BASE_URL + path, json=body, headers=self._headers(), timeout=self.timeout)
+        expired = resp.status_code in (401, 403)
+        data = None
+        if not expired:
+            resp.raise_for_status()
+            try:
+                data = resp.json()
+            except ValueError:
+                raise WebAuthError("响应不是合法 JSON")
+            if data.get("code") == 401:
+                expired = True
+        if expired:
+            if allow_relogin and _get_ocr() is not None:
+                ok, _msg = self.login_auto()
+                if ok:
+                    return self._authed_post(path, body, allow_relogin=False)
+            raise WebAuthError("网页版 token 已失效，请在后台「打印」页登录重新获取（或装 ddddocr 自动登录）。")
+        return data
+
+    # ---------- 官方面单 PDF（推荐打印方式） ----------
+    def get_print_pdf(self, scan_number):
+        """
+        单号 → 官方面单 PDF url。返回 (ok, info_or_msg)：
+          ok=True  → {"pdf_url", "waybillNo", "waybillId"}
+          ok=False → 错误提示字符串
+        流程：/waybill/list 拿内部 id → /waybill/batchPrint 拿 S3 PDF 链接（DMS 官方渲染，含所有版式）。
+        """
+        lst = self._authed_post(WAYBILL_LIST_PATH, {"waybillNo": scan_number})
+        rows = lst.get("rows") or []
+        if not rows:
+            return False, "未查到该单号"
+        row = next((x for x in rows if x.get("waybillNo") == scan_number), rows[0])
+        wid = row.get("id")
+        if not wid:
+            return False, "未取到 waybillId"
+        pr = self._authed_post(BATCH_PRINT_PATH, {"waybillIds": [wid], "waybillType": 1})
+        if pr.get("code") != SUCCESS_CODE:
+            return False, pr.get("msg") or "取面单 PDF 失败"
+        data = pr.get("data") or []
+        url = (data[0] or {}).get("url") if data else None
+        if not url:
+            return False, "面单 PDF 链接为空"
+        return True, {"pdf_url": url, "waybillNo": row.get("waybillNo") or scan_number, "waybillId": wid}
+
+    def get_print_image(self, scan_number, dpi=203):
+        """
+        官方面单 PDF → PNG（base64 data URL），交前端用免授权的 ADD_PRINT_IMAGE 打印。
+        返回 (ok, {"image_b64","waybillNo"} | 错误提示)。dpi 默认 203（热敏标准 8dot/mm）。
+        """
+        ok, info = self.get_print_pdf(scan_number)
+        if not ok:
+            return False, info
+        if _fitz is None:
+            return False, "未安装 PyMuPDF，无法把官方 PDF 转图打印"
+        try:
+            r = self._session.get(info["pdf_url"], timeout=self.timeout)
+            r.raise_for_status()
+            doc = _fitz.open(stream=r.content, filetype="pdf")
+            zoom = dpi / 72.0
+            pix = doc[0].get_pixmap(matrix=_fitz.Matrix(zoom, zoom))
+            png = pix.tobytes("png")
+        except Exception as e:  # noqa
+            return False, f"PDF 转图失败：{e}"
+        return True, {
+            "image_b64": "data:image/png;base64," + base64.b64encode(png).decode(),
+            "waybillNo": info["waybillNo"],
+        }
+
+    # ---------- 查单（取面单字段，自排版兜底） ----------
     def get_label_info(self, scan_number):
         """
         返回 (ok, data_or_msg)：
