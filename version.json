@@ -1,4 +1,4 @@
 {
-  "version": "1.2.0",
-  "notes": "打印改用 DMS 官方面单：waybill/list+batchPrint 取官方 PDF，本地渲染成图用免授权方式打印（绕开 CLodop PDF 付费授权）；自排版作兜底"
+  "version": "1.3.0",
+  "notes": "新增语音：签退成功/请先收件/签退异常；拒绝无需填理由；后台可设『差值<x 自动放行』"
 }

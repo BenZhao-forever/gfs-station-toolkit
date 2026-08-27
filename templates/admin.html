@@ -103,6 +103,12 @@
           <label class="ck"><input id="s-wrong" type="checkbox"> 有错扫件量也算强提醒</label>
           <label class="ck"><input id="s-sound" type="checkbox"> 强提醒播放“取件量低”</label>
         </div>
+        <h3>自动放行</h3>
+        <div class="grid">
+          <label>差值 &lt; 此值时自动放行（免人工）<input id="s-autopass" type="number" min="0"></label>
+        </div>
+        <p class="muted small">应领−实领 &lt; 此值、且无错扫、实领&gt;0 时自动放行并播“签退成功”。
+          实领为 0 时不自动放行、播“请先收件”等人工处理。</p>
         <h3>面单尺寸 / 打印机</h3>
         <div class="grid">
           <label>面单宽(mm) <input id="s-lw" type="number"></label>

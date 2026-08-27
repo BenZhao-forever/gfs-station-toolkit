@@ -4,9 +4,16 @@
   var UI = { strong_diff: 5, weak_diff: 1, sound_on_strong: true,
              label_width_mm: 100, label_height_mm: 150, printer_name: "" };
   var lastJobId = null;
-  var soundedFor = {};      // 已播过声音的 job id
+  var soundedFor = {};      // 已播过的“声音”键：jobId + ':' + name
   var printedFor = {};      // 已送打印的 job id
   var actionJobId = null;   // 当前等待放行/拒绝的 job id
+
+  function playOnce(jobId, name, elId){
+    var key = jobId + ":" + name;
+    if (soundedFor[key]) return;
+    soundedFor[key] = true;
+    try { var a = document.getElementById(elId); a.currentTime = 0; a.play().catch(function(){}); } catch(e){}
+  }
 
   function $(id){ return document.getElementById(id); }
   function show(view){
@@ -63,6 +70,7 @@
     if (job.status === "error"){
       show("error"); setBodyState("error");
       $("err-msg").textContent = job.error || job.message || "出错了";
+      playOnce(job.id, "error", "snd-error");   // 任何意外 → “签退异常”
       return;
     }
     if (job.kind === "signout"){ renderSignout(job, isDone); return; }
@@ -83,10 +91,17 @@
     // 背景：强红 / 弱黄 / 正常
     setBodyState(job.level === "strong" ? "strong" : (job.level === "weak" ? "weak" : "ok"));
 
-    // 强提醒声音（每单一次）
-    if (job.level === "strong" && r.sound_on_strong && !soundedFor[job.id]){
-      soundedFor[job.id] = true;
-      try { var a = $("snd-strong"); a.currentTime = 0; a.play().catch(function(){}); } catch(e){}
+    // 语音（每单每种一次；实领0 优先播“请先收件”，不再播“签退成功”）
+    var rec = Number(r.receivedCount || 0);
+    if (rec === 0){
+      playOnce(job.id, "collect", "snd-collect");            // 实领0 → “请先收件”
+      if (job.status === "awaiting_action" && job.level === "strong" && r.sound_on_strong){
+        playOnce(job.id, "strong", "snd-strong");            // 仍可叠加强提醒
+      }
+    } else if (job.status === "done"){
+      playOnce(job.id, "success", "snd-success");            // 放行/签退成功 → “签退成功”
+    } else if (job.status === "awaiting_action" && job.level === "strong" && r.sound_on_strong){
+      playOnce(job.id, "strong", "snd-strong");              // 强提醒 → “取件量低”
     }
 
     // 是否等待人工
@@ -168,10 +183,9 @@
   });
   $("btn-reject").addEventListener("click", function(){
     if (!actionJobId) return;
-    var remark = prompt("拒绝原因（可留空）：", "") || "";
     var id = actionJobId; actionJobId = null;
     fetch("/api/action/intercept", {method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({job_id:id, remark:remark})}).catch(function(){});
+      body: JSON.stringify({job_id:id, remark:""})}).catch(function(){});
   });
 
   // ---------------- 键盘/HID 扫码兜底 ----------------

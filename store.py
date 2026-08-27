@@ -43,6 +43,8 @@ DEFAULT_SETTINGS = {
     "weak_diff": 1,            # 差 >= weak_diff（且 <= strong_diff）→ 弱提醒（黄）
     "strong_on_wrongscan": True,   # 错扫 > 0 也算强提醒
     "sound_on_strong": True,       # 强提醒播放 “取件量低”
+    # 自动放行：应领-实领 差值 < auto_pass_diff 且无错扫、实领>0 时，自动放行（免人工）
+    "auto_pass_diff": 3,
     # 打印
     "printer_name": "",        # CLodop 打印机名，空 = 默认打印机
     "label_width_mm": 100,

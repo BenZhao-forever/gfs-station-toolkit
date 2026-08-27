@@ -240,11 +240,33 @@ class Worker:
         }
         job.message = res.get("message") or ""
 
+        rec = res.get("receivedCount") or 0
+        srid = res.get("signRecordId")
+        duid = res.get("driverUserId")
+
         # 是否需要人工：接口要求 / 数对不上 / 有错扫
         needs_action = res.get("needs_release") or diff != 0 or wrong > 0
         if not needs_action:
             job.status = "done"
             job.message = "签退成功"
+            return
+
+        # 自动放行：差值 < auto_pass_diff 且 无错扫 且 实领>0（实领0 需人工“请先收件”）
+        auto_pass = (wrong == 0) and (rec > 0) and (diff < s["auto_pass_diff"])
+        if auto_pass:
+            try:
+                if srid is not None:
+                    ok, msg = client.sign_out_pass(srid, duid)
+                else:
+                    ok, msg = True, "已放行"
+            except Exception as e:  # noqa
+                ok, msg = False, str(e)
+            job.status = "done" if ok else "error"
+            job.message = "已自动放行" if ok else f"自动放行失败：{msg}"
+            if not ok:
+                job.error = msg
+            store.append_log({"kind": "signout_auto_pass", "code": job.code,
+                              "diff": diff, "rec": rec, "ok": ok, "msg": job.message})
             return
 
         # 阻塞队列，等大屏放行/拒绝

@@ -134,6 +134,7 @@
       if(!d.ok) return; CURRENT = d.settings; var s=d.settings;
       $("s-strong").value=s.strong_diff; $("s-weak").value=s.weak_diff;
       $("s-wrong").checked=!!s.strong_on_wrongscan; $("s-sound").checked=!!s.sound_on_strong;
+      $("s-autopass").value=s.auto_pass_diff;
       $("s-lw").value=s.label_width_mm; $("s-lh").value=s.label_height_mm; $("s-printer").value=s.printer_name||"";
       $("s-baud").value=s.serial_baud;
     });
@@ -144,6 +145,7 @@
       weak_diff:parseInt($("s-weak").value||"0",10),
       strong_on_wrongscan:$("s-wrong").checked,
       sound_on_strong:$("s-sound").checked,
+      auto_pass_diff:parseInt($("s-autopass").value||"0",10),
       label_width_mm:parseInt($("s-lw").value||"100",10),
       label_height_mm:parseInt($("s-lh").value||"150",10),
       printer_name:$("s-printer").value
