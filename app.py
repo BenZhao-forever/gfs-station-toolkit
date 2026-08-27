@@ -33,6 +33,7 @@ app = Flask(__name__)
 store = Store()
 app.secret_key = store.secret_key()
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
+app.config["TEMPLATES_AUTO_RELOAD"] = True   # 改了模板不必重启进程也能生效
 
 # 签退码：QR_ 开头（QR_<uuid>）。其余一律当面单条码打印。
 SIGNOUT_RE = re.compile(r"^QR_", re.IGNORECASE)
