@@ -12,8 +12,11 @@ if errorlevel 1 (
 
 echo Installing / updating dependencies...
 python -m pip install -q -r requirements.txt
-REM Optional: at-rest password encryption. Skipped silently if it fails (e.g. Windows 7).
+REM Optional extras. Skipped silently if they fail (e.g. onnxruntime on Windows 7).
+REM   cryptography = at-rest password encryption
+REM   ddddocr      = local captcha OCR for fully-automatic print-token login
 python -m pip install -q cryptography >nul 2>nul
+python -m pip install -q ddddocr >nul 2>nul
 
 REM Open fullscreen kiosk after 3s (auto-detects Chrome/Edge; safe if none).
 start "" cmd /c "timeout /t 3 >nul & call "%~dp0open_kiosk.bat""

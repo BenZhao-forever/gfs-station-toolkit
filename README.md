@@ -36,8 +36,12 @@
 ## 后台配置项（/admin）
 
 - **DMS 账号**：站点账号密码（PDA 签退 + 网页打印通用）。可「测试登录」。
-- **打印**：DMS 网页版 token（`Bearer …`）。可用测试单号「测试查单」。
-  > 生产建议接入网页登录自动刷新 token（见下）。测试期手动贴一个即可。
+- **打印**：拿 DMS 网页版打印 token。三种方式：
+  1. **自动登录（推荐）**：点「自动登录获取 token」，本地 `ddddocr` 识别验证码、账号密码自动登录，
+     过期后台自动重登——无人值守。
+  2. **手动输验证码登录**：ddddocr 没装时，点「获取验证码」看图输入后登录。
+  3. **手动贴 token**：从浏览器 F12 复制 `Bearer …` 应急。
+  可用测试单号「测试查单」验证。
 - **提醒设置**：强阈值 X（默认 5）、弱阈值（默认 1）、错扫是否算强、强提醒是否播声音、面单尺寸、打印机名。
 - **扫码枪**：勾选两个 COM 口 + 波特率（默认 9600），保存后重启程序生效。
 - **更新**：填公开仓库 `owner/repo`，可「检查更新 / 立即更新并重启」。
@@ -68,10 +72,15 @@ PDA 端 `https://dms-public-api.gofoexpress.com`（复用签到项目鉴权，�
 - 扫描查单：`gfs-site/appWaybillScanQuery/scanQuery/v2`
 - 退回转运中心：`gfs-site/centerReturn/scanCheck`、`centerReturn/submit`、`centerReturn/batch/submit`、`centerReturn/refuse`
 
-## 待接入：网页版自动登录（免手动贴 token）
+## 网页版自动登录（已实现）
 
-`dms_web_client.py` 里 `WEB_LOGIN_PATH` 待抓包填入：在 DMS 网页登录时 F12→Network 抓那条返回
-token 的登录 POST（URL / 请求体 / 响应），填好后打印 token 可用账号密码自动获取并过期自动刷新。
+DMS 网页版是 RuoYi 框架，登录 `POST /prod-api/login`，要点（见 `../DMS接入要点.md`）：
+- 密码需 **AES-CBC 加密**（固定 key/iv `59SO+p2dXTeghIqm`）后再提交；
+- 登录带**图形验证码**，用 **ddddocr** 本地识别（4 位数字/字母，识别错就换一张重试）；
+- 登录成功后**必须调一次 `/getInfo`**，否则很多接口"200 成功但空数据"。
+
+程序已封装：`dms_web_client.login_auto()` 全自动完成上述流程；`keepalive()` 每 10 分钟用
+`getInfo` 续期，token 失效自动重登。ddddocr 装不上（如 Win7 的 onnxruntime）时退回后台人工输码。
 
 ## 目录
 

@@ -22,7 +22,8 @@ from flask import (
 
 from store import Store, encryption_active
 from gfs_client import GfsClient, LoginError
-from dms_web_client import DmsWebClient, WebAuthError
+import dms_web_client as dms_web_client_module
+from dms_web_client import DmsWebClient, WebAuthError, captcha_solver_available
 import updater
 import serial_reader
 
@@ -330,18 +331,50 @@ class Worker:
 worker = Worker()
 
 
+def _auto_login_if_possible():
+    """DMS 已配置且装了 ddddocr → 自动登录拿打印 token。返回 (ok, msg)。"""
+    dms = store.get_dms()
+    if not (dms.get("username") and dms.get("has_password")):
+        return False, "未配置 DMS 账号"
+    if not captcha_solver_available():
+        return False, "未安装 ddddocr"
+    web = web_client()
+    ok, msg = web.login_auto()
+    if ok:
+        store.set_print_token(web._token)
+        _invalidate_clients()
+    return ok, msg
+
+
 def _print_token_keepalive():
-    """定期用 getInfo 续期打印 token，避免空闲时过期。失效则记日志（需人工重新在线登录）。"""
+    """定期续期打印 token；失效时若装了 ddddocr 就自动重登，否则记日志提示人工。"""
     warned = False
+    # 启动后：无 token 且能自动登录 → 直接登一次
+    time.sleep(5)
+    try:
+        if not store.get_print_token() and captcha_solver_available():
+            ok, msg = _auto_login_if_possible()
+            store.append_log({"kind": "print_auto_login",
+                              "message": ("启动自动登录成功" if ok else f"启动自动登录失败：{msg}")})
+    except Exception:
+        pass
     while True:
         time.sleep(600)  # 每 10 分钟
         try:
             if not store.get_print_token():
+                # 没 token：能自动就补登
+                if captcha_solver_available() and store.get_dms().get("username"):
+                    _auto_login_if_possible()
                 continue
             web = web_client()
-            alive = web.keepalive()
-            if alive:
+            if web.keepalive():
                 warned = False
+                continue
+            # token 失效
+            if captcha_solver_available():
+                ok, msg = _auto_login_if_possible()
+                store.append_log({"kind": "print_relogin",
+                                  "message": ("token 失效已自动重登" if ok else f"自动重登失败：{msg}")})
             elif not warned:
                 warned = True
                 store.append_log({"kind": "print_token_expired",
@@ -467,6 +500,8 @@ def admin_me():
     return jsonify({
         "logged_in": _require_admin(),
         "encryption": encryption_active(),
+        "captcha_solver": captcha_solver_available(),
+        "print_token_set": bool(store.get_print_token()),
         "version": APP_VERSION,
     })
 
@@ -548,6 +583,26 @@ def admin_set_print_token():
     store.set_print_token(b.get("token") or "")
     _invalidate_clients()
     return jsonify({"ok": True})
+
+
+@app.route("/api/admin/print-login/auto", methods=["POST"])
+def admin_print_login_auto():
+    """ddddocr 自动识别验证码登录，拿到打印 token 并保存（无人值守）。"""
+    if not _require_admin():
+        return jsonify({"ok": False, "message": "未登录"}), 403
+    dms = store.get_dms()
+    if not dms.get("username") or not dms.get("has_password"):
+        return jsonify({"ok": False, "message": "请先在「DMS 账号」保存账号密码"}), 200
+    web = web_client()
+    try:
+        ok, msg = web.login_auto()
+    except Exception as e:  # noqa
+        return jsonify({"ok": False, "message": f"登录异常：{e}"}), 200
+    if ok:
+        store.set_print_token(web._token)
+        _invalidate_clients()
+    return jsonify({"ok": ok, "message": msg,
+                    "solver": dms_web_client_module.captcha_solver_available()})
 
 
 @app.route("/api/admin/print-login/captcha")

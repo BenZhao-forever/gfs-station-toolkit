@@ -24,6 +24,11 @@
     api("/api/admin/me").then(function(d){
       $("ver").textContent = d.version || "-";
       $("enc-note").textContent = d.encryption ? "密码加密存储：已启用" : "⚠ 未启用加密（缺 cryptography），密码将明文存储";
+      var hint = $("auto-hint"), btn = $("auto-login");
+      if (d.captcha_solver === false){
+        if (hint) hint.innerHTML = "⚠ 本机未安装验证码识别库 <code>ddddocr</code>，自动登录不可用，请用下面「方式二」手动输码。";
+        if (btn) btn.disabled = true;
+      }
     });
     loadDms(); loadPrint(); loadSettings(); loadUpdate();
   }
@@ -79,6 +84,14 @@
 
   // ---------- 打印 token ----------
   function loadPrint(){ /* token 不回显，仅可覆盖 */ }
+
+  // 自动登录（ddddocr）
+  $("auto-login").addEventListener("click", function(){
+    msg($("auto-msg"), "自动识别验证码登录中，请稍候…");
+    post("/api/admin/print-login/auto", {}).then(function(d){
+      msg($("auto-msg"), d.message, d.ok);
+    });
+  });
 
   var capUuid = "";
   function loadCaptcha(){

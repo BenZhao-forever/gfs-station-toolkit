@@ -1,4 +1,4 @@
 {
-  "version": "1.1.0",
-  "notes": "打印 token 支持后台在线登录（输一次图形验证码即可获取），并定时保活；不再需手动 F12 找 token"
+  "version": "1.2.0",
+  "notes": "打印 token 全自动登录：ddddocr 识别验证码 + AES 加密密码 + getInfo；过期自动重登，无人值守"
 }

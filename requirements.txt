@@ -3,5 +3,7 @@ Flask>=3.0,<3.1
 Werkzeug>=3.0,<3.1
 requests>=2.28
 pyserial>=3.5
-# 可选：密码本地加密。Win7 若装不上会自动降级（见 run.bat / README）。
-# cryptography
+pycryptodome>=3.15
+# 可选（run.bat 会尽力安装，装不上自动降级）：
+#   cryptography —— 本地密码加密（缺失则明文存本机）
+#   ddddocr      —— 验证码本地识别，实现打印 token 全自动登录（缺失则后台手动输码）

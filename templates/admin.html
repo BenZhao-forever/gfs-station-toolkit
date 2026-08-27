@@ -63,8 +63,15 @@
         <p class="muted">换单打印用 DMS 网页版账号（与签退同一账号密码）。登录带图形验证码，无法完全自动，
           在此输一次验证码即可拿到 token；程序会定时续期保活，过期后再来登录一次。</p>
 
-        <h3>方式一：在线登录获取（推荐）</h3>
-        <p class="muted small">使用「DMS 账号」里已保存的账号密码。点「获取验证码」，看图输入后登录。</p>
+        <h3>方式一：自动登录（推荐，无人值守）</h3>
+        <p class="muted small" id="auto-hint">用「DMS 账号」里的账号密码 + 本地验证码识别(ddddocr)，一键登录、过期自动重登，无需人工。</p>
+        <div class="row">
+          <button id="auto-login">自动登录获取 token</button>
+          <span class="msg" id="auto-msg"></span>
+        </div>
+
+        <h3>方式二：手动输验证码登录</h3>
+        <p class="muted small">ddddocr 没装/识别不了时用。点「获取验证码」，看图输入后登录。</p>
         <div class="row">
           <button id="cap-get" class="ghost">获取验证码</button>
           <img id="cap-img" alt="验证码" style="height:40px;border:1px solid var(--line);border-radius:6px;display:none;cursor:pointer" title="点击换一张">
