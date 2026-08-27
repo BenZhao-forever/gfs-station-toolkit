@@ -25,7 +25,22 @@
     <!-- 空闲 -->
     <section id="view-idle" class="view">
       <div class="scan-hint">
-        <div class="icon">◱</div>
+        <div class="icon">
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M12 40 V18 A6 6 0 0 1 18 12 H40" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+            <path d="M80 12 H102 A6 6 0 0 1 108 18 V40" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+            <path d="M108 80 V102 A6 6 0 0 1 102 108 H80" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+            <path d="M40 108 H18 A6 6 0 0 1 12 102 V80" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+            <g fill="currentColor">
+              <rect x="34" y="40" width="6" height="40"/>
+              <rect x="46" y="40" width="4" height="40"/>
+              <rect x="56" y="40" width="8" height="40"/>
+              <rect x="70" y="40" width="4" height="40"/>
+              <rect x="80" y="40" width="6" height="40"/>
+            </g>
+            <rect x="28" y="58" width="64" height="4" rx="2" fill="currentColor" opacity="0.45"/>
+          </svg>
+        </div>
         <div class="big-hint" id="idle-text">请扫码</div>
         <div class="sub-hint">司机签退请扫签退码 · 其余条码自动打印面单</div>
       </div>
@@ -43,12 +58,17 @@
         <div class="count wrong"><div class="c-num" id="c-wrong">0</div><div class="c-lbl">错扫件量</div></div>
       </div>
       <div class="diff-row">
-        差值（应取−实取）：<b id="c-diff">0</b>
+        差值(应取-实取)：<b id="c-diff">0</b>
         <span class="tag" id="so-msg"></span>
       </div>
       <!-- 需人工放行 -->
       <div class="action-bar hidden" id="action-bar">
-        <div class="block-note">⛔ 队列已暂停，请先处理本单</div>
+        <div class="block-note">
+          <svg class="mini" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="6" y="5" width="4" height="14" rx="1.2" fill="currentColor"/>
+            <rect x="14" y="5" width="4" height="14" rx="1.2" fill="currentColor"/>
+          </svg>队列已暂停，请先处理本单
+        </div>
         <div class="btns">
           <button class="btn pass" id="btn-pass">放 行</button>
           <button class="btn reject" id="btn-reject">拒 绝</button>

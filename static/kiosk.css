@@ -30,7 +30,9 @@ body{
 .view{ width:100%; max-width:1100px; text-align:center; }
 
 /* 空闲 */
-.scan-hint .icon{ font-size:16vh; color:var(--sub); line-height:1; }
+.scan-hint .icon{ color:var(--sub); line-height:1; }
+.scan-hint .icon svg{ width:20vh; height:20vh; display:block; margin:0 auto; }
+.block-note .mini{ width:1em; height:1em; vertical-align:-0.15em; margin-right:.4em; }
 .big-hint{ font-size:9vh; font-weight:800; margin-top:1vh; }
 .sub-hint{ font-size:2.8vh; color:var(--sub); margin-top:1.5vh; }
 
