@@ -34,6 +34,8 @@ code{ background:#eef2f7; padding:1px 5px; border-radius:4px; font-family:monosp
 .right{ display:flex; align-items:center; gap:14px; }
 .link{ color:var(--accent); text-decoration:none; font-size:14px; }
 .ghost{ background:#eef2f7; color:var(--ink); border:0; padding:9px 16px; border-radius:8px; cursor:pointer; }
+a.ghost{ text-decoration:none; display:inline-block; font-size:15px; }
+a.ghost:hover{ background:#e2e8f2; }
 
 /* 面板 */
 main{ max-width:900px; margin:24px auto; padding:0 24px; }
