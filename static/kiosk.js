@@ -92,13 +92,10 @@
     // 背景：强红 / 弱黄 / 正常
     setBodyState(job.level === "strong" ? "strong" : (job.level === "weak" ? "weak" : "ok"));
 
-    // 语音（每单每种一次；实领0 优先播“请先收件”，不再播“签退成功”）
+    // 语音（每单每种一次；实领0 只播“请先收件”，不叠加“取件量低”，也不播“签退成功”）
     var rec = Number(r.receivedCount || 0);
     if (rec === 0){
-      playOnce(job.id, "collect", "snd-collect");            // 实领0 → “请先收件”
-      if (job.status === "awaiting_action" && job.level === "strong" && r.sound_on_strong){
-        playOnce(job.id, "strong", "snd-strong");            // 仍可叠加强提醒
-      }
+      playOnce(job.id, "collect", "snd-collect");            // 实领0 → 只播“请先收件”
     } else if (job.status === "done"){
       playOnce(job.id, "success", "snd-success");            // 放行/签退成功 → “签退成功”
     } else if (job.status === "awaiting_action" && job.level === "strong" && r.sound_on_strong){
